@@ -113,11 +113,11 @@ function parseLayer(layer) {
     //if layer is text then fetch properties
     if (result.ldta.type == 1) {
       // result.ldta.text=(layer?.tdgp[0]?.tdgp[0]?.btds[0]?.tdbs[0]?.string??"")[0]
-      try {
-        result.ldta.font = hexConverter.hexToAsciiString((((((layer?.tdgp ?? [])[0]?.tdgp ?? [])[0]?.btds ?? [])[0]?.btdk ?? [])[0]?.$?.bdata || "") || "")?.split("/0 << /0 (þÿ")[1]?.split(")")[0]?.replace(/\u0000/gi, "") || ""
-      } catch (err) {
-        result.ldta.font=layer
-      }
+      // try {
+      //   result.ldta.font = hexConverter.hexToAsciiString((((((layer?.tdgp ?? [])[0]?.tdgp ?? [])[0]?.btds ?? [])[0]?.btdk ?? [])[0]?.$?.bdata || "") || "")?.split("/0 << /0 (þÿ")[1]?.split(")")[0]?.replace(/\u0000/gi, "") || ""
+      // } catch (err) {
+      //   result.ldta.font=layer
+      // }
 
     }
   }
