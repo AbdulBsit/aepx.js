@@ -114,11 +114,9 @@ function parseLayer(layer) {
     if (result.ldta.type == 1) {
       // result.ldta.text=(layer?.tdgp[0]?.tdgp[0]?.btds[0]?.tdbs[0]?.string??"")[0]
       try {
-        console.log(result.ldta.name, hexConverter.hexToAsciiString((((((layer?.tdgp ?? [])[0]?.tdgp ?? [])[0]?.btds ?? [])[0]?.btdk ?? [])[0]?.$?.bdata || "") || "")?.split("/0 << /0 (þÿ")[1]?.split(")")[0]?.replace(/\u0000/gi, "") || "")
         result.ldta.font = hexConverter.hexToAsciiString((((((layer?.tdgp ?? [])[0]?.tdgp ?? [])[0]?.btds ?? [])[0]?.btdk ?? [])[0]?.$?.bdata || "") || "")?.split("/0 << /0 (þÿ")[1]?.split(")")[0]?.replace(/\u0000/gi, "") || ""
       } catch (err) {
-        console.log("error in line 120")
-        result.ldta.font = layer
+        result.ldta.font = ""
       }
 
     }
@@ -251,12 +249,7 @@ function parseItem(item) {
 
   // parse Sfdr
   if (item.Sfdr) {
-    try {
-
-      result.sfdr = parseFold(item.Sfdr[0]); // eslint-disable-line no-use-before-define
-    } catch (err) {
-      console.log("err in line 258")
-    }
+    result.sfdr = parseFold(item.Sfdr[0]); // eslint-disable-line no-use-before-define
   }
 
 
