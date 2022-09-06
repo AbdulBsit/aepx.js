@@ -96,6 +96,7 @@ function parseLayer(layer) {
 
   if (layer.ldta) {
     const ldta = layer.ldta[0].$.bdata;
+    const strName = layer.string[0] || ""
     result.ldta = {
       layer_id: hexConverter.hexToDecimal(ldta.slice(0, 8)),
       startTimeline: hexConverter.hexTo32Int(ldta.slice(24, 32))
@@ -106,7 +107,7 @@ function parseLayer(layer) {
         / hexConverter.hexTo32Int(ldta.slice(64, 72)),
       reference_id: hexConverter.hexToDecimal(ldta.slice(80, 88)),
       type: hexConverter.hexToDecimal(ldta.slice(122, 124)),
-      name: hexConverter.hexToAsciiString(ldta.slice(128, 192).replace(/00/gi, '')),
+      name: strName || hexConverter.hexToAsciiString(ldta.slice(128, 192).replace(/00/gi, '')),
       asset_type: hexConverter.hexToDecimal(ldta.slice(262, 264)),
       link_layer_id: hexConverter.hexToDecimal(ldta.slice(264, 272)),
     };
