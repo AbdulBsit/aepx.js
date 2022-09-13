@@ -1,8 +1,10 @@
 const fs = require('fs');
-const xml2jsparser = require('xml2js-parser');
 const hexConverter = require('./hexConverter');
 const specials = require('./specials');
-
+const { XMLParser } = require('fast-xml-parser');
+const parser = new XMLParser(
+  { ignoreAttributes: false, }
+);
 function parseTextDocument(document) {
   return document;
 }
@@ -17,11 +19,11 @@ function parseEffectParade(parade) {
 
 function parseProperty(property) {
   const result = {
-    tdsb: property.tdsb ? property.tdsb[0].$.bdata : undefined,
+    tdsb: property.tdsb ? property.tdsb["@_bdata"] : undefined,
   };
   if (property.tdsn) {
-    result.tdsn = property.tdsn[0].string
-      ? property.tdsn[0].string[0] : hexConverter.hexToAsciiString(property.tdsn[0].$.bdata);
+    result.tdsn = property.tdsn.string
+      ? property.tdsn.string : hexConverter.hexToAsciiString(property.tdsn["@_bdata"]);
   }
 
   if (property.tdmn) {
@@ -33,7 +35,7 @@ function parseProperty(property) {
     };
 
     property.tdmn.forEach((tdmn) => {
-      const tdmnString = hexConverter.hexToAsciiString(tdmn.$.bdata.replace(/00/gi, ''));
+      const tdmnString = hexConverter.hexToAsciiString(tdmn["@_bdata"].replace(/00/gi, ''));
 
       switch (tdmnString) {
         case 'ADBE Text Properties':
@@ -72,15 +74,15 @@ function parseProperty(property) {
   }
 
   if (property.tdum) {
-    result.tdum = hexConverter.hexToDouble(property.tdum[0].$.bdata);
+    result.tdum = hexConverter.hexToDouble(property.tdum["@_bdata"]);
   }
 
   if (property.tduM) {
-    result.tduM = hexConverter.hexToDouble(property.tduM[0].$.bdata);
+    result.tduM = hexConverter.hexToDouble(property.tduM["@_bdata"]);
   }
 
   if (property.cdat) {
-    result.cdat = property.cdat[0].$.bdata
+    result.cdat = property.cdat["@_bdata"]
       .match(/.{1,16}/g)
       .map(x => hexConverter.hexToDouble(x));
   }
@@ -91,12 +93,12 @@ function parseProperty(property) {
 function parseLayer(layer) {
   const result = {
     // parse string
-    string: layer.string[0],
+    string: layer.string,
   };
 
   if (layer.ldta) {
-    const ldta = layer.ldta[0].$.bdata;
-    const strName = layer.string[0] || ""
+    const ldta = layer.ldta["@_bdata"];
+    const strName = layer.string || ""
     result.ldta = {
       layer_id: hexConverter.hexToDecimal(ldta.slice(0, 8)),
       startTimeline: hexConverter.hexTo32Int(ldta.slice(24, 32))
@@ -113,9 +115,9 @@ function parseLayer(layer) {
     };
     //if layer is text then fetch properties
     if (result.ldta.type == 1) {
-      // result.ldta.text=(layer?.tdgp[0]?.tdgp[0]?.btds[0]?.tdbs[0]?.string??"")[0]
+      // result.ldta.text=(layer?.tdgp?.tdgp?.btds?.tdbs?.string??"")
       try {
-        result.ldta.font = hexConverter.hexToAsciiString((((((layer?.tdgp ?? [])[0]?.tdgp ?? [])[0]?.btds ?? [])[0]?.btdk ?? [])[0]?.$?.bdata || "") || "")?.split("/0 << /0 (þÿ")[1]?.split(")")[0]?.replace(/\u0000/gi, "") || ""
+        result.ldta.font = hexConverter.hexToAsciiString((((((layer?.tdgp ?? [])?.tdgp ?? [])?.btds ?? [])?.btdk ?? [])["@_bdata"] || "") || "")?.split("/0 << /0 (þÿ")[1]?.split(")")?.replace(/\u0000/gi, "") || ""
       } catch (err) {
         result.ldta.font = ""
       }
@@ -125,7 +127,7 @@ function parseLayer(layer) {
   // 
   /*
   if (layer.tdgp) {
-    result.tdgp = parseProperty(layer.tdgp[0]);
+    result.tdgp = parseProperty(layer.tdgp);
   }
   */
 
@@ -135,12 +137,12 @@ function parseLayer(layer) {
 function parseItem(item) {
   const result = {
     // parse string
-    string: item.string[0],
+    string: item.string,
   };
 
   // parse idta
   if (item.idta) {
-    const idta = item.idta[0].$.bdata;
+    const idta = item.idta["@_bdata"];
     result.idta = {
       entry_type: hexConverter.hexToDecimal(idta.slice(0, 4)),
       id: hexConverter.hexToDecimal(idta.slice(32, 40)),
@@ -150,26 +152,26 @@ function parseItem(item) {
 
   // parse PRin
   if (item.PRin) {
-    const prin = item.PRin[0];
+    const prin = item.PRin;
 
     result.prin = {
       prin: [
-        hexConverter.hexToDecimal(prin.prin[0].$.bdata.slice(0, 8)),
-        hexConverter.hexToAsciiString(prin.prin[0].$.bdata.slice(8, 104).replace(/00/gi, '')),
-        hexConverter.hexToAsciiString(prin.prin[0].$.bdata.slice(104, 200).replace(/00/gi, '')),
-        hexConverter.hexToDecimal(prin.prin[0].$.bdata.slice(200, 208)),
+        hexConverter.hexToDecimal(prin.prin["@_bdata"].slice(0, 8)),
+        hexConverter.hexToAsciiString(prin.prin["@_bdata"].slice(8, 104).replace(/00/gi, '')),
+        hexConverter.hexToAsciiString(prin.prin["@_bdata"].slice(104, 200).replace(/00/gi, '')),
+        hexConverter.hexToDecimal(prin.prin["@_bdata"].slice(200, 208)),
       ],
       prda: [
-        hexConverter.hexToDecimal(prin.prda[0].$.bdata.slice(0, 8)),
-        hexConverter.hexToDecimal(prin.prda[0].$.bdata.slice(8, 16)),
-        hexConverter.hexToDecimal(prin.prda[0].$.bdata.slice(16, 24)),
+        hexConverter.hexToDecimal(prin.prda["@_bdata"].slice(0, 8)),
+        hexConverter.hexToDecimal(prin.prda["@_bdata"].slice(8, 16)),
+        hexConverter.hexToDecimal(prin.prda["@_bdata"].slice(16, 24)),
       ],
     };
   }
 
   // parse cdta
   if (item.cdta) {
-    const cdta = item.cdta[0].$.bdata;
+    const cdta = item.cdta["@_bdata"];
 
     const frameRatio = hexConverter.hexToDecimal(cdta.slice(8, 16));
     result.cdta = {
@@ -187,12 +189,12 @@ function parseItem(item) {
 
   // parse Pin
   if (item.Pin) {
-    const pin = item.Pin[0];
+    const pin = item.Pin;
     result.pin = {};
 
     // parse sspc
     if (pin.sspc) {
-      const sspc = pin.sspc[0].$.bdata;
+      const sspc = pin.sspc["@_bdata"];
 
       result.pin.sspc = {
         file_type: hexConverter.hexToAsciiString(sspc.slice(44, 52)),
@@ -207,7 +209,7 @@ function parseItem(item) {
 
     // parse fileReference
     if (pin.Als2) {
-      const fileReference = pin.Als2[0].fileReference[0].$.fullpath;
+      const fileReference = pin.Als2.fileReference["@_fullpath"];
 
       result.filename = fileReference.replace(/^.*[\\/]/, '');
       result.file_reference = fileReference;
@@ -215,7 +217,7 @@ function parseItem(item) {
 
     // parse opti
     if (pin.opti) {
-      const opti = pin.opti[0].$.bdata;
+      const opti = pin.opti["@_bdata"];
       const optiType = hexConverter.hexToDecimal(opti.slice(8, 12));
       if (optiType === 1) {
         result.pin.opti = {
@@ -250,25 +252,23 @@ function parseItem(item) {
 
   // parse Sfdr
   if (item.Sfdr) {
-    result.sfdr = parseFold(item.Sfdr[0]); // eslint-disable-line no-use-before-define
+    result.sfdr = parseFold(item.Sfdr); // eslint-disable-line no-use-before-define
   }
-
-
   // parse layr
   if (item.Layr) {
-    result.layr = item.Layr.map(layr => parseLayer(layr));
+    result.layr = Array.isArray(item.Layr) ? item.Layr.map(layr => parseLayer(layr)) : [parseLayer(item.Layr)]
   }
   // parse SLay
   if (item.SLay) {
-    result.slay = item.SLay.map(slay => parseLayer(slay));
+    result.slay = Array.isArray(item.SLay) ? item.SLay.map(slay => parseLayer(slay)) : [parseLayer(item.SLay)];
   }
   // parse CLay
   if (item.CLay) {
-    result.clay = item.CLay.map(clay => parseLayer(clay));
+    result.clay = Array.isArray(item.CLay) ? item.CLay.map(clay => parseLayer(clay)) : [parseLayer(item.CLay)];
   }
   // parse SecL
   if (item.SecL) {
-    result.secl = item.SecL.map(secl => parseLayer(secl));
+    result.secl = Array.isArray(item.SecL) ? item.SecL.map(secl => parseLayer(secl)) : [parseLayer(item.SecL)];
   }
 
   return result;
@@ -276,14 +276,14 @@ function parseItem(item) {
 
 function parseFold(fold) {
   return {
-    items: fold.Item ? fold.Item.map(item => parseItem(item)) : [],
+    items: fold.Item ? (Array.isArray(fold.Item) ? fold.Item.map(item => parseItem(item)) : [parseItem(fold.Item)]) : [],
   };
 }
 
 function parseProject(project) {
   return {
     // parse folds
-    fold: project.Fold ? parseFold(project.Fold[0]) : undefined,
+    fold: project.Fold ? parseFold(project.Fold) : undefined,
   };
 }
 
@@ -292,27 +292,25 @@ module.exports = {
     switch (arguments.length) {
       case 1:
         return new Promise((resolve, reject) => {
-          xml2jsparser.parseString(data, (err, target) => {
-            if (err) {
-              return reject(err);
-            }
+          try {
+            const target = parser.parse(data)
             return resolve(parseProject(target.AfterEffectsProject));
-          });
+          } catch (err) {
+            reject(err)
+          }
         });
       case 2: // callback api
       default:
-        xml2jsparser.parseString(data, (err, target) => {
-          if (err) {
-            handler(err, null);
-          }
-          const result = parseProject(target.AfterEffectsProject);
-          handler(null, result);
-        });
-        return null;
+        try {
+          const target = parser.parse(data)
+          handler(null, parseProject(target.AfterEffectsProject));
+        } catch (err) {
+          handler(err, null);
+        }
     }
   },
   parseSync(data) {
-    const target = xml2jsparser.parseStringSync(data);
+    const target = parser.parse(data)
     return parseProject(target.AfterEffectsProject);
   },
   parseFile(filePath, handler) {
@@ -323,13 +321,12 @@ module.exports = {
             if (err) {
               reject(err);
             }
-            xml2jsparser.parseString(data, (error, target) => {
-              if (error) {
-                reject(error);
-              }
-
+            try {
+              const target = parser.parse(data)
               resolve(parseProject(target.AfterEffectsProject));
-            });
+            } catch (err) {
+              reject(err);
+            }
           });
         });
       case 2: // callback api
@@ -338,20 +335,20 @@ module.exports = {
           if (err) {
             handler(err, null);
           }
-          xml2jsparser.parseString(data, (error, target) => {
-            if (error) {
-              handler(error, null);
-            }
-            const result = parseProject(target.AfterEffectsProject);
-            handler(null, result);
-          });
+          try {
+            const target = parser.parse(data)
+            handler(null, parseProject(target.AfterEffectsProject));
+          } catch (err) {
+            handler(err, null);
+          }
         });
         return null;
     }
   },
   parseFileSync(filePath) {
     const data = fs.readFileSync(filePath);
-    const target = xml2jsparser.parseStringSync(data);
+
+    const target = parser.parse(data);
     return parseProject(target.AfterEffectsProject);
   },
 };

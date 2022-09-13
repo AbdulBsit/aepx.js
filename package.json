@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/actumn/aepx.js#readme",
   "dependencies": {
-    "xml2js-parser": "^1.1.1"
+    "fast-xml-parser": "^4.0.9"
   },
   "devDependencies": {
     "chai": "^4.2.0",
