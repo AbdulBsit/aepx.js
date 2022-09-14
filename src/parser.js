@@ -117,8 +117,9 @@ function parseLayer(layer) {
     if (result.ldta.type == 1) {
       // result.ldta.text=(layer?.tdgp?.tdgp?.btds?.tdbs?.string??"")
       try {
-        result.ldta.font = hexConverter.hexToAsciiString((((((layer?.tdgp ?? [])?.tdgp ?? [])?.btds ?? [])?.btdk ?? [])["@_bdata"] || "") || "")?.split("/0 << /0 (þÿ")[1]?.split(")")?.replace(/\u0000/gi, "") || ""
+        result.ldta.font = hexConverter.hexToAsciiString(layer?.tdgp?.tdgp[0]?.btds?.btdk["@_bdata"] || "").split("/0 << /0 (þÿ")[1].split(")")[0].replace(/\u0000/gi, "") || ""
       } catch (err) {
+        console.log(err.message)
         result.ldta.font = ""
       }
 
